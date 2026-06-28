@@ -1,0 +1,22 @@
+# Competition data: NEVER COMMIT
+*.csv
+*.tsv
+*.pdf
+/data/
+/cards/
+!dummy/
+!dummy/*.csv
+
+# Node / Vite
+node_modules/
+.npm-cache/
+dist/
+.vite/
+*.local
+.DS_Store
+.env*
+
+# Coverage / logs
+coverage/
+*.log
+*.tsbuildinfo
