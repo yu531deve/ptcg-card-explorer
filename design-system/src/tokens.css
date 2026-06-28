@@ -1,0 +1,55 @@
+/* Design tokens — the single source of truth for the look.
+   All component styles reference these custom properties. */
+:root {
+  /* Surfaces & background */
+  --ds-bg: #eef1f7;
+  --ds-bg-accent: #e7ecf6;
+  --ds-surface: #ffffff;
+  --ds-surface-2: #f6f9fd;
+
+  /* Borders */
+  --ds-border: #e3e8f1;
+  --ds-border-strong: #cfd8e6;
+
+  /* Text */
+  --ds-text: #1b2333;
+  --ds-muted: #6b7689;
+
+  /* Accent */
+  --ds-accent: #3b6fd4;
+  --ds-accent-strong: #2f5bb5;
+  --ds-accent-soft: #eaf1ff;
+
+  /* Status */
+  --ds-warn-border: #f0cf94;
+  --ds-warn-bg: #fff8ec;
+  --ds-success: #2f9e6e;
+  --ds-danger: #b04a4a;
+
+  /* Radius */
+  --ds-radius: 12px;
+  --ds-radius-sm: 8px;
+  --ds-radius-pill: 999px;
+
+  /* Spacing scale */
+  --ds-space-1: 4px;
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-space-5: 24px;
+
+  /* Elevation */
+  --ds-shadow-sm: 0 1px 2px rgba(20, 30, 55, 0.05), 0 2px 6px rgba(20, 30, 55, 0.05);
+  --ds-shadow: 0 8px 24px rgba(20, 30, 55, 0.08);
+  --ds-shadow-lg: 0 24px 60px rgba(20, 30, 55, 0.22);
+
+  /* Focus ring */
+  --ds-ring: 0 0 0 3px rgba(59, 111, 212, 0.18);
+
+  /* Typography */
+  --ds-font:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ds-text-sm: 12px;
+  --ds-text-md: 14px;
+  --ds-text-lg: 16px;
+}

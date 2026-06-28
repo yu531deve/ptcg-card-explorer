@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ptcgabc/design-system — preview</title>
+    <link rel="stylesheet" href="./dist/styles.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: var(--ds-font);
+        color: var(--ds-text);
+        background:
+          radial-gradient(1200px 600px at 100% -10%, var(--ds-bg-accent), transparent 60%),
+          var(--ds-bg);
+      }
+      .wrap { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+      h1 { letter-spacing: -0.02em; }
+      .eyebrow { color: var(--ds-accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; }
+      section { margin-top: 32px; }
+      section > h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ds-muted); }
+      .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="eyebrow">PTCG ABC</p>
+      <h1>Design System プレビュー</h1>
+      <p style="color: var(--ds-muted)">
+        実際のコンポーネントは React で提供されます。これはクラスベースのスタイルを確認するための静的プレビューです。
+      </p>
+
+      <section>
+        <h2>Button</h2>
+        <div class="row">
+          <button class="ds-btn ds-btn--primary ds-btn--md">Primary</button>
+          <button class="ds-btn ds-btn--ghost ds-btn--md">Ghost</button>
+          <button class="ds-btn ds-btn--subtle ds-btn--md">Subtle</button>
+          <button class="ds-btn ds-btn--primary ds-btn--sm">Small</button>
+          <button class="ds-btn ds-btn--primary ds-btn--md" disabled>Disabled</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>SegmentedControl</h2>
+        <div class="ds-segmented" role="group" aria-label="表示モード">
+          <button class="ds-segmented__option ds-segmented__option--active">テーブル</button>
+          <button class="ds-segmented__option">グリッド</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Chip / Badge</h2>
+        <div class="row">
+          <button class="ds-chip ds-chip--active">特性あり<span class="ds-chip__count">223</span></button>
+          <button class="ds-chip">ex<span class="ds-chip__count">121</span></button>
+          <button class="ds-chip">メガ<span class="ds-chip__count">30</span></button>
+          <span class="ds-badge ds-badge--neutral">neutral</span>
+          <span class="ds-badge ds-badge--accent">特性</span>
+          <span class="ds-badge ds-badge--warn">注意</span>
+          <span class="ds-badge ds-badge--success">OK</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>Field</h2>
+        <label class="ds-field" style="max-width: 280px">
+          <span class="ds-field__label">検索</span>
+          <span class="ds-field__control"><input type="search" placeholder="カード名 / 効果 / ルール" /></span>
+          <span class="ds-field__hint">NFKC 正規化で横断検索します</span>
+        </label>
+      </section>
+
+      <section>
+        <h2>Card</h2>
+        <div class="grid">
+          <div class="ds-card ds-card--padded ds-card--interactive">
+            <strong>#1 基本【草】エネルギー</strong>
+            <p style="margin: 8px 0 0; color: var(--ds-muted)">ポケモン/たね・HP 30</p>
+          </div>
+          <div class="ds-card ds-card--padded">
+            <strong>静的カード</strong>
+            <p style="margin: 8px 0 0; color: var(--ds-muted)">interactive なしの例</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Panel</h2>
+        <div class="ds-panel" style="max-width: 360px">
+          <div class="ds-panel__head">
+            <h3 class="ds-panel__title">比較トレイ (2)</h3>
+            <button class="ds-btn ds-btn--subtle ds-btn--sm">すべて外す</button>
+          </div>
+          <div class="ds-panel__body" style="color: var(--ds-muted)">
+            ここに本文が入ります。
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

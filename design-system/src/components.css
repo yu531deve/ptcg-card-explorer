@@ -1,0 +1,291 @@
+/* Component styles. Every value comes from tokens.css. */
+
+/* Button ------------------------------------------------------------------ */
+.ds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ds-space-2);
+  font-family: var(--ds-font);
+  font-weight: 700;
+  border-radius: var(--ds-radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.05s ease;
+}
+
+.ds-btn:active {
+  transform: translateY(1px);
+}
+
+.ds-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ds-ring);
+}
+
+.ds-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ds-btn--sm {
+  font-size: var(--ds-text-sm);
+  padding: 6px 12px;
+}
+
+.ds-btn--md {
+  font-size: var(--ds-text-md);
+  padding: 9px 16px;
+}
+
+.ds-btn--primary {
+  background: var(--ds-accent);
+  border-color: var(--ds-accent);
+  color: #ffffff;
+  box-shadow: var(--ds-shadow-sm);
+}
+
+.ds-btn--primary:hover {
+  background: var(--ds-accent-strong);
+  box-shadow: var(--ds-shadow);
+}
+
+.ds-btn--ghost {
+  background: var(--ds-surface);
+  border-color: var(--ds-accent);
+  color: var(--ds-accent);
+}
+
+.ds-btn--ghost:hover {
+  background: var(--ds-accent-soft);
+}
+
+.ds-btn--subtle {
+  background: var(--ds-surface-2);
+  border-color: var(--ds-border-strong);
+  color: var(--ds-text);
+}
+
+.ds-btn--subtle:hover {
+  background: var(--ds-accent-soft);
+  border-color: var(--ds-accent);
+}
+
+/* Card -------------------------------------------------------------------- */
+.ds-card {
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-radius);
+  box-shadow: var(--ds-shadow-sm);
+}
+
+.ds-card--padded {
+  padding: var(--ds-space-4);
+}
+
+.ds-card--interactive {
+  cursor: pointer;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.08s ease,
+    border-color 0.15s ease;
+}
+
+.ds-card--interactive:hover {
+  box-shadow: var(--ds-shadow);
+  transform: translateY(-2px);
+}
+
+/* Panel ------------------------------------------------------------------- */
+.ds-panel {
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-radius);
+  box-shadow: var(--ds-shadow-sm);
+  overflow: hidden;
+}
+
+.ds-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-space-3);
+  padding: var(--ds-space-3) var(--ds-space-4);
+  border-bottom: 1px solid var(--ds-border);
+}
+
+.ds-panel__title {
+  margin: 0;
+  font-size: var(--ds-text-lg);
+  font-weight: 800;
+  color: var(--ds-text);
+}
+
+.ds-panel__body {
+  padding: var(--ds-space-4);
+}
+
+/* Chip -------------------------------------------------------------------- */
+.ds-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+  font-family: var(--ds-font);
+  font-size: var(--ds-text-sm);
+  font-weight: 700;
+  color: var(--ds-text);
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-border-strong);
+  border-radius: var(--ds-radius-pill);
+  padding: 5px 12px;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.ds-chip:hover {
+  background: var(--ds-accent-soft);
+}
+
+.ds-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--ds-ring);
+}
+
+.ds-chip--active {
+  background: var(--ds-accent);
+  border-color: var(--ds-accent);
+  color: #ffffff;
+}
+
+.ds-chip__count {
+  font-weight: 800;
+  opacity: 0.7;
+}
+
+.ds-chip--active .ds-chip__count {
+  color: rgba(255, 255, 255, 0.82);
+  opacity: 1;
+}
+
+/* Badge ------------------------------------------------------------------- */
+.ds-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--ds-font);
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: var(--ds-radius-pill);
+  padding: 2px 10px;
+  border: 1px solid transparent;
+}
+
+.ds-badge--neutral {
+  background: var(--ds-surface-2);
+  border-color: var(--ds-border-strong);
+  color: var(--ds-muted);
+}
+
+.ds-badge--accent {
+  background: var(--ds-accent-soft);
+  border-color: #c9dcff;
+  color: var(--ds-accent-strong);
+}
+
+.ds-badge--warn {
+  background: var(--ds-warn-bg);
+  border-color: var(--ds-warn-border);
+  color: #8a6206;
+}
+
+.ds-badge--success {
+  background: #e7f7ef;
+  border-color: #b6e6cf;
+  color: var(--ds-success);
+}
+
+/* SegmentedControl -------------------------------------------------------- */
+.ds-segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--ds-surface-2);
+  border: 1px solid var(--ds-border-strong);
+  border-radius: var(--ds-radius-sm);
+}
+
+.ds-segmented__option {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ds-muted);
+  font-family: var(--ds-font);
+  font-size: var(--ds-text-sm);
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.ds-segmented__option:hover {
+  color: var(--ds-text);
+}
+
+.ds-segmented__option:focus-visible {
+  outline: none;
+  box-shadow: var(--ds-ring);
+}
+
+.ds-segmented__option--active {
+  background: var(--ds-accent);
+  color: #ffffff;
+  box-shadow: var(--ds-shadow-sm);
+}
+
+/* Field ------------------------------------------------------------------- */
+.ds-field {
+  display: grid;
+  gap: var(--ds-space-1);
+}
+
+.ds-field__label {
+  font-size: var(--ds-text-sm);
+  font-weight: 800;
+  color: var(--ds-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ds-field__control input,
+.ds-field__control select,
+.ds-field__control textarea {
+  width: 100%;
+  font-family: var(--ds-font);
+  color: var(--ds-text);
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-border-strong);
+  border-radius: var(--ds-radius-sm);
+  padding: 9px 11px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.ds-field__control input:focus,
+.ds-field__control select:focus,
+.ds-field__control textarea:focus {
+  outline: none;
+  border-color: var(--ds-accent);
+  box-shadow: var(--ds-ring);
+}
+
+.ds-field__hint {
+  font-size: var(--ds-text-sm);
+  color: var(--ds-muted);
+}

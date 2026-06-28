@@ -1,0 +1,9 @@
+Card ID,Card Name,Expansion,Collection No.,Stage (Pokémon)/Type (Energy and Trainer),Rule,Category,Previous stage,HP,Type,Weakness,Resistance (Type),Retreat,Move Name,Cost,Damage,Effect Explanation
+1001,Ember Lynx ex,ABC,001,Basic Pokémon,Pokémon ex,Tera(Fire),n/a,220,{R},{W},n/a,2,[Tera],n/a,n/a,"As long as this Pokémon is on your Bench, prevent all damage done to it by attacks."
+1001,Ember Lynx ex,ABC,001,Basic Pokémon,Pokémon ex,Tera(Fire),n/a,220,{R},{W},n/a,2,Blazing Pounce,{R}{C}●,90+,"If this Pokémon has any damage counters on it, this attack does 60 more damage."
+1002,River Otter,ABC,002,Stage 1 Pokémon,n/a,Future,Stream Pup,110,{W},{L},n/a,1,Aqua Draw,{W},30,Draw a card.
+1003,Garden Sage,ABC,003,Supporter,n/a,Trainer's Pokémon(Iono),n/a,n/a,n/a,n/a,n/a,n/a,Supporter,n/a,n/a,Search your deck for up to 2 Basic Pokémon and put them onto your Bench.
+1004,Rocket Patch,ABC,004,Item,ACE SPEC,Trainer's Pokémon(Team Rocket),n/a,n/a,n/a,n/a,n/a,n/a,Item,n/a,n/a,Attach a {Team Rocket} Energy from your discard pile to 1 of your Pokémon.
+1005,Prism Energy,ABC,GRA,Special Energy,n/a,n/a,n/a,n/a,{C},n/a,n/a,n/a,Energy,n/a,n/a,This card provides {C} Energy.
+1006,Drake Meteor,ABC,005,Stage 2 Pokémon,Mega Pokémon ex,Tera(Stellar),Drake Wing,330,竜,n/a,n/a,3,Meteor Break,{R}{W}●,220,Discard 2 Energy from this Pokémon.
+1006,Drake Meteor,ABC,005,Stage 2 Pokémon,Mega Pokémon ex,Tera(Stellar),Drake Wing,330,竜,n/a,n/a,3,Stellar Guard,{A}{A},n/a,"During your opponent’s next turn, this Pokémon takes 80 less damage from attacks."
