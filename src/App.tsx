@@ -137,6 +137,7 @@ export default function App() {
         cards={activeBundle.cards}
         pdfUrl={activePdf?.url ?? null}
         indexPageCount={activePdf?.indexPageCount ?? 0}
+        lang={activeLang ?? 'JP'}
         langSwitch={headerControls}
       />
     );

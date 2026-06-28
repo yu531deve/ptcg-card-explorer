@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import CardImage from '../components/CardImage';
-import type { Card } from '../types';
+import type { Card, CardLanguage } from '../types';
 import { s } from './styleString';
 import { glyphFor, themeVars, toRefCard, type RefCard, type ThemeName } from './refModel';
+import { t, tv } from './i18n';
 
 type Props = {
   cards: Card[];
   pdfUrl: string | null;
   indexPageCount: number;
+  lang?: CardLanguage;
   langSwitch?: ReactNode;
 };
 
@@ -59,7 +61,10 @@ const SCOPED_CSS = `
 .pcv-imgfill{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;}
 `;
 
-export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langSwitch }: Props) {
+export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, lang = 'JP', langSwitch }: Props) {
+  const en = lang === 'EN';
+  const tr = (key: string) => t(lang, key);
+  const tval = (value: string | null | undefined) => tv(lang, value);
   const persisted = useRef(loadPersisted()).current;
   const refCards = useMemo(() => cards.map(toRefCard), [cards]);
   const expansions = useMemo(
@@ -218,13 +223,17 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
     }
     return true;
   };
+  // Display label for a facet option value (the stored value stays canonical/JP).
+  const optLabel = (facetKey: string, value: string) =>
+    facetKey === 'hasAbility' ? tr('hasAbilityOpt') : tval(value);
+
   const facetGroups = FACETS.map((F) => {
     const opts = (F.key === 'expansion' ? expansions : F.opts);
     const base = refCards.filter((c) => passesExcept(c, F.key as string));
     const active = sets[F.key as string] || new Set<string>();
     return {
       key: F.key as string,
-      label: F.label,
+      label: tr(`facet_${F.key as string}`),
       options: opts.map((o) => {
         const count =
           F.key === 'hasAbility'
@@ -236,15 +245,16 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
                 return v === o;
               }).length;
         const on = active.has(o);
-        return { key: o, label: o, count: count.toLocaleString(), on, count0: count === 0 };
+        return { key: o, label: optLabel(F.key as string, o), count: count.toLocaleString(), on, count0: count === 0 };
       }),
     };
   });
 
   const chips: { label: string; onRemove: () => void }[] = [];
   Object.keys(sets).forEach((k) => {
-    const F = FACETS.find((f) => (f.key as string) === k);
-    Array.from(sets[k]).forEach((v) => chips.push({ label: `${F ? F.label : ''} · ${v}`, onRemove: () => toggleFacet(k, v) }));
+    Array.from(sets[k]).forEach((v) =>
+      chips.push({ label: `${tr(`facet_${k}`)} · ${optLabel(k, v)}`, onRemove: () => toggleFacet(k, v) }),
+    );
   });
 
   const compareItems = compare.map((id) => byId.get(id)).filter((c): c is RefCard => Boolean(c));
@@ -295,9 +305,9 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
     return (
       <div style={s(`padding:14px 16px;display:flex;flex-direction:column;gap:12px;${horizontal ? '' : 'height:100%;'}`)}>
         <div style={s('display:flex;align-items:center;justify-content:space-between;')}>
-          <span style={s('font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--text-2);')}>フィルター</span>
+          <span style={s('font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--text-2);')}>{tr('filters')}</span>
           {chips.length ? (
-            <button onClick={() => { setFilters({}); setRenderLimit(120); }} style={s("border:none;background:none;color:var(--accent);cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;padding:2px 4px;")}>すべてクリア</button>
+            <button onClick={() => { setFilters({}); setRenderLimit(120); }} style={s("border:none;background:none;color:var(--accent);cursor:pointer;font-size:11px;font-family:'Noto Sans JP',sans-serif;padding:2px 4px;")}>{tr('clearAll')}</button>
           ) : null}
         </div>
         {chips.length ? (
@@ -360,22 +370,22 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
       <div style={s('display:flex;flex-direction:column;min-height:0;background:var(--panel);height:100%;')}>
         <div style={s('flex:none;display:flex;align-items:center;gap:8px;padding:11px 13px;border-bottom:1px solid var(--border);background:var(--panel);')}>
           <span style={s('font-size:14px;')}>📌</span>
-          <span style={s('font-weight:700;font-size:13px;')}>比較トレイ</span>
+          <span style={s('font-weight:700;font-size:13px;')}>{tr('compareTray')}</span>
           <span style={s("font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-3);")}>{compareItems.length}/12</span>
           <div style={s('flex:1;')} />
           <div style={s('display:flex;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:2px;gap:2px;')}>
-            <button onClick={() => setCompareMode('images')} style={s(seg(compareMode === 'images'))}>画像</button>
-            <button onClick={() => setCompareMode('details')} style={s(seg(compareMode === 'details'))}>詳細</button>
+            <button onClick={() => setCompareMode('images')} style={s(seg(compareMode === 'images'))}>{tr('images')}</button>
+            <button onClick={() => setCompareMode('details')} style={s(seg(compareMode === 'details'))}>{tr('details')}</button>
           </div>
           {has ? (
-            <button onClick={() => setCompare([])} title="すべて外す" style={s('width:28px;height:26px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text-2);cursor:pointer;font-size:12px;')}>✕</button>
+            <button onClick={() => setCompare([])} title={tr('removeAll')} style={s('width:28px;height:26px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text-2);cursor:pointer;font-size:12px;')}>✕</button>
           ) : null}
-          <button onClick={() => setSidebarOpen(false)} title="たたむ" style={s('width:28px;height:26px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text-2);cursor:pointer;font-size:12px;')}>⤬</button>
+          <button onClick={() => setSidebarOpen(false)} title={tr('collapse')} style={s('width:28px;height:26px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text-2);cursor:pointer;font-size:12px;')}>⤬</button>
         </div>
         {!has ? (
           <div style={s('flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-3);padding:24px;text-align:center;')}>
             <div style={s('width:44px;height:44px;border-radius:11px;border:1.5px dashed var(--border-2);display:flex;align-items:center;justify-content:center;font-size:18px;')}>＋</div>
-            <div style={s('font-size:12px;line-height:1.7;')}>カードの ＋ を押して<br />見比べたいカードを追加</div>
+            <div style={s('font-size:12px;line-height:1.7;')}>{tr('compareEmpty')}</div>
           </div>
         ) : compareMode === 'images' ? (
           <div style={s(scroll)}>
@@ -386,7 +396,7 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
                     <CardArt card={it} fontSize={38} />
                     <span style={s('position:absolute;left:0;right:0;bottom:0;padding:5px 6px;background:linear-gradient(transparent,var(--panel));font-size:10px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;z-index:1;')}>{it.name}</span>
                   </div>
-                  <button onClick={() => toggleCompare(it.id)} title="外す" style={s('position:absolute;right:5px;top:5px;width:20px;height:20px;border-radius:6px;border:1px solid var(--border);background:rgba(255,255,255,.86);backdrop-filter:blur(4px);color:var(--text-2);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;z-index:2;')}>✕</button>
+                  <button onClick={() => toggleCompare(it.id)} title={tr('remove')} style={s('position:absolute;right:5px;top:5px;width:20px;height:20px;border-radius:6px;border:1px solid var(--border);background:rgba(255,255,255,.86);backdrop-filter:blur(4px);color:var(--text-2);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;z-index:2;')}>✕</button>
                 </div>
               ))}
             </div>
@@ -402,21 +412,21 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
                   <div style={s('flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;')}>
                     <div style={s('display:flex;align-items:center;gap:6px;')}>
                       <span style={s('font-weight:700;font-size:12.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;')}>{it.name}</span>
-                      {it.flag ? <span style={s("font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:600;color:var(--bg);background:var(--text);border-radius:4px;padding:1px 5px;")}>{it.flag}</span> : null}
+                      {it.flag ? <span style={s("font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:600;color:var(--bg);background:var(--text);border-radius:4px;padding:1px 5px;")}>{tval(it.flag)}</span> : null}
                       <button onClick={() => toggleCompare(it.id)} style={s('width:18px;height:18px;border:none;border-radius:5px;background:var(--hover);color:var(--text-2);cursor:pointer;font-size:10px;')}>✕</button>
                     </div>
                     <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;font-size:10.5px;')}>
-                      {[
-                        ['HP', it.hp == null ? '—' : String(it.hp)],
-                        ['タイプ', glyphFor(it.type)],
-                        ['弱点', it.weakness ? glyphFor(it.weakness) : '—'],
-                        ['にげる', it.retreat == null ? '—' : String(it.retreat)],
-                        ['最大DPE', it.dpe ? it.dpe.toFixed(1) : '—'],
-                        ['特性', it.hasAbility && it.ability ? it.ability.name : '—'],
-                      ].map(([label, value]) => (
-                        <div key={label} style={s('display:flex;justify-content:space-between;gap:4px;min-width:0;')}>
-                          <span style={s('color:var(--text-3);flex:none;')}>{label}</span>
-                          <span style={s(`font-family:'JetBrains Mono',monospace;${label === '最大DPE' ? 'font-weight:600;color:var(--accent);' : label === 'HP' || label === 'タイプ' ? 'font-weight:600;' : ''}overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`)}>{value}</span>
+                      {([
+                        { id: 'hp', label: tr('hp'), value: it.hp == null ? '—' : String(it.hp), strong: true },
+                        { id: 'type', label: tr('type'), value: glyphFor(it.type), strong: true },
+                        { id: 'weak', label: tr('weakness'), value: it.weakness ? glyphFor(it.weakness) : '—', strong: false },
+                        { id: 'retreat', label: tr('retreat'), value: it.retreat == null ? '—' : String(it.retreat), strong: false },
+                        { id: 'dpe', label: tr('maxDpe'), value: it.dpe ? it.dpe.toFixed(1) : '—', accent: true },
+                        { id: 'ability', label: tr('ability'), value: it.hasAbility && it.ability ? it.ability.name : '—', strong: false },
+                      ]).map((r) => (
+                        <div key={r.id} style={s('display:flex;justify-content:space-between;gap:4px;min-width:0;')}>
+                          <span style={s('color:var(--text-3);flex:none;')}>{r.label}</span>
+                          <span style={s(`font-family:'JetBrains Mono',monospace;${r.accent ? 'font-weight:600;color:var(--accent);' : r.strong ? 'font-weight:600;' : ''}overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`)}>{r.value}</span>
                         </div>
                       ))}
                     </div>
@@ -444,27 +454,27 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
           </div>
         </div>
         <div style={s('display:flex;background:var(--panel-2);border:1px solid var(--border);border-radius:9px;padding:2px;gap:2px;')}>
-          <button onClick={() => setMode('search')} style={s(seg(mode === 'search'))}>検索モード</button>
-          <button onClick={() => setMode('deck')} style={s(seg(mode === 'deck'))}>デッキ作成モード</button>
+          <button onClick={() => setMode('search')} style={s(seg(mode === 'search'))}>{tr('searchMode')}</button>
+          <button onClick={() => setMode('deck')} style={s(seg(mode === 'deck'))}>{tr('deckMode')}</button>
         </div>
         <div style={s('flex:1;')} />
         <div style={s("display:flex;align-items:center;gap:14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-2);")}>
-          <span style={s('display:flex;align-items:center;gap:6px;')}><span style={s('width:6px;height:6px;border-radius:50%;background:var(--accent);')} />JP</span>
-          <span>全 <b style={s('color:var(--text);')}>{refCards.length.toLocaleString()}</b> 枚</span>
+          <span style={s('display:flex;align-items:center;gap:6px;')}><span style={s('width:6px;height:6px;border-radius:50%;background:var(--accent);')} />{lang}</span>
+          <span>{en ? <><b style={s('color:var(--text);')}>{refCards.length.toLocaleString()}</b> cards</> : <>全 <b style={s('color:var(--text);')}>{refCards.length.toLocaleString()}</b> 枚</>}</span>
         </div>
         {langSwitch ? <div style={s('display:flex;align-items:center;')}>{langSwitch}</div> : null}
-        <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="ライト / ダーク切替" style={s('flex:none;width:32px;height:32px;border-radius:9px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;')}>{theme === 'dark' ? '☀' : '☾'}</button>
+        <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title={tr('themeToggle')} style={s('flex:none;width:32px;height:32px;border-radius:9px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;')}>{theme === 'dark' ? '☀' : '☾'}</button>
       </header>
 
       {/* TOOLBAR */}
       <div style={s('flex:none;display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--border);background:var(--panel);')}>
         <div style={s('display:flex;flex-direction:column;line-height:1.2;min-width:128px;')}>
-          <span style={s("font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;")}>{resultCount.toLocaleString()} <span style={s('color:var(--text-3);font-weight:400;')}>件</span></span>
-          <span style={s("font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;")}>{Math.min(renderLimit, resultCount).toLocaleString()} 件表示中</span>
+          <span style={s("font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;")}>{resultCount.toLocaleString()} <span style={s('color:var(--text-3);font-weight:400;')}>{en ? 'results' : '件'}</span></span>
+          <span style={s("font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;")}>{en ? `Showing ${Math.min(renderLimit, resultCount).toLocaleString()}` : `${Math.min(renderLimit, resultCount).toLocaleString()} 件表示中`}</span>
         </div>
         <div style={s('position:relative;flex:1;max-width:420px;')}>
           <span style={s('position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:13px;pointer-events:none;')}>⌕</span>
-          <input className="pcv-search" value={query} onChange={(e) => { setQuery(e.target.value); setRenderLimit(120); }} placeholder="名前・ID・タイプ・ワザ・特性で検索…" style={s("width:100%;height:34px;padding:0 30px 0 30px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12.5px;outline:none;")} />
+          <input className="pcv-search" value={query} onChange={(e) => { setQuery(e.target.value); setRenderLimit(120); }} placeholder={tr('searchPlaceholder')} style={s("width:100%;height:34px;padding:0 30px 0 30px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12.5px;outline:none;")} />
           {q.length > 0 ? (
             <button onClick={() => { setQuery(''); setRenderLimit(120); }} style={s('position:absolute;right:7px;top:50%;transform:translateY(-50%);width:20px;height:20px;border:none;border-radius:6px;background:var(--hover);color:var(--text-2);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;')}>✕</button>
           ) : null}
@@ -472,22 +482,22 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
         <div style={s('display:flex;align-items:center;gap:4px;')}>
           <div style={s('position:relative;')}>
             <select value={sortKey} onChange={(e) => setSortKey(e.target.value)} style={s("appearance:none;height:34px;padding:0 28px 0 11px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12.5px;cursor:pointer;outline:none;")}>
-              <option value="id">#ID 順</option>
-              <option value="name">名前 順</option>
-              <option value="hp">HP 順</option>
-              <option value="retreat">にげる 順</option>
-              <option value="dpe">火力(DPE) 順</option>
-              <option value="expansion">拡張 順</option>
+              <option value="id">{tr('sort_id')}</option>
+              <option value="name">{tr('sort_name')}</option>
+              <option value="hp">{tr('sort_hp')}</option>
+              <option value="retreat">{tr('sort_retreat')}</option>
+              <option value="dpe">{tr('sort_dpe')}</option>
+              <option value="expansion">{tr('sort_expansion')}</option>
             </select>
             <span style={s('position:absolute;right:9px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:10px;color:var(--text-3);')}>▾</span>
           </div>
-          <button onClick={() => setSortDir(sortDir === 'asc' ? 'desc' : 'asc')} title="昇順 / 降順" style={s("width:34px;height:34px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:13px;")}>{sortDir === 'asc' ? '↑' : '↓'}</button>
+          <button onClick={() => setSortDir(sortDir === 'asc' ? 'desc' : 'asc')} title={tr('sortDir')} style={s("width:34px;height:34px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:var(--text);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:13px;")}>{sortDir === 'asc' ? '↑' : '↓'}</button>
         </div>
         <div style={s('width:1px;height:22px;background:var(--border);')} />
-        <button onClick={() => { setFavOnly(!favOnly); setRenderLimit(120); }} title="お気に入りのみ" style={s(toolBtn(favOnly))}><span style={s('font-size:13px;')}>★</span> お気に入り</button>
+        <button onClick={() => { setFavOnly(!favOnly); setRenderLimit(120); }} title={tr('favoritesOnly')} style={s(toolBtn(favOnly))}><span style={s('font-size:13px;')}>★</span> {tr('favorites')}</button>
         <div style={s('display:flex;background:var(--panel-2);border:1px solid var(--border);border-radius:9px;padding:2px;gap:2px;')}>
-          <button onClick={() => setView('grid')} title="グリッド表示" style={s(segIcon(view === 'grid'))}>▦</button>
-          <button onClick={() => setView('table')} title="テーブル表示" style={s(segIcon(view === 'table'))}>▤</button>
+          <button onClick={() => setView('grid')} title={tr('gridView')} style={s(segIcon(view === 'grid'))}>▦</button>
+          <button onClick={() => setView('table')} title={tr('tableView')} style={s(segIcon(view === 'table'))}>▤</button>
         </div>
       </div>
 
@@ -503,7 +513,7 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
           {mode === 'deck' ? (
             <div style={s('flex:none;display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--accent-soft);border-bottom:1px solid var(--border);font-size:12px;color:var(--text-2);')}>
               <span style={s("font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--accent);border:1px solid var(--accent);border-radius:5px;padding:2px 7px;")}>DECK</span>
-              <span><b style={s('color:var(--text);')}>デッキ作成モードは近日対応。</b> 60枚 / 同名カードは4枚まで / たねポケモン1枚以上 のルール検証を実装予定。一覧から候補を探しつつ ★・比較 で目星をつけられます。</span>
+              <span>{tr('deckBanner')}</span>
             </div>
           ) : null}
 
@@ -512,10 +522,10 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
               <div style={s('height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--text-3);padding:40px;')}>
                 <div style={s('width:56px;height:56px;border-radius:14px;border:1.5px dashed var(--border-2);display:flex;align-items:center;justify-content:center;font-size:24px;')}>⌕</div>
                 <div style={s('text-align:center;line-height:1.7;')}>
-                  <div style={s('font-size:14px;font-weight:600;color:var(--text-2);')}>該当するカードがありません</div>
-                  <div style={s('font-size:12px;')}>検索語やフィルターを調整してください</div>
+                  <div style={s('font-size:14px;font-weight:600;color:var(--text-2);')}>{tr('noResults')}</div>
+                  <div style={s('font-size:12px;')}>{tr('noResultsHint')}</div>
                 </div>
-                <button onClick={() => { setFilters({}); setQuery(''); setFavOnly(false); setRenderLimit(120); }} style={s("margin-top:4px;height:32px;padding:0 16px;border:1px solid var(--border);border-radius:9px;background:var(--panel);color:var(--text);cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;")}>条件をすべてクリア</button>
+                <button onClick={() => { setFilters({}); setQuery(''); setFavOnly(false); setRenderLimit(120); }} style={s("margin-top:4px;height:32px;padding:0 16px;border:1px solid var(--border);border-radius:9px;background:var(--panel);color:var(--text);cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;")}>{tr('clearConditions')}</button>
               </div>
             ) : view === 'grid' ? (
               <div style={s('display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;padding:16px;')}>
@@ -525,10 +535,10 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
                     <div key={c.id} className="pcv-tile" onClick={() => setSelectedId(c.id)} style={s(`cursor:pointer;border-radius:11px;overflow:hidden;border:1px solid ${sel ? 'var(--accent)' : 'var(--border)'};background:var(--panel);box-shadow:var(--shadow);transition:transform .14s,box-shadow .14s,border-color .14s;`)}>
                       <div style={s('position:relative;aspect-ratio:.72;background:var(--panel-2);overflow:hidden;border-bottom:1px solid var(--border);')}>
                         <CardArt card={c} fontSize={52} />
-                        {c.flag ? <span style={s("position:absolute;left:8px;top:8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.04em;color:var(--bg);background:var(--text);border-radius:5px;padding:2px 6px;z-index:2;")}>{c.flag}</span> : null}
+                        {c.flag ? <span style={s("position:absolute;left:8px;top:8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.04em;color:var(--bg);background:var(--text);border-radius:5px;padding:2px 6px;z-index:2;")}>{tval(c.flag)}</span> : null}
                         <div style={s('position:absolute;right:7px;top:7px;display:flex;flex-direction:column;gap:5px;z-index:2;')}>
-                          <button onClick={(e) => { e.stopPropagation(); toggleFav(c.id); }} title="お気に入り" style={s(shapeBtn(favSet.has(c.id), false))}>{favSet.has(c.id) ? '★' : '☆'}</button>
-                          <button onClick={(e) => { e.stopPropagation(); toggleCompare(c.id); }} title="比較に追加" style={s(shapeBtn(cmpSet.has(c.id), false))}>{cmpSet.has(c.id) ? '✓' : '＋'}</button>
+                          <button onClick={(e) => { e.stopPropagation(); toggleFav(c.id); }} title={tr('favorites')} style={s(shapeBtn(favSet.has(c.id), false))}>{favSet.has(c.id) ? '★' : '☆'}</button>
+                          <button onClick={(e) => { e.stopPropagation(); toggleCompare(c.id); }} title={tr('compare')} style={s(shapeBtn(cmpSet.has(c.id), false))}>{cmpSet.has(c.id) ? '✓' : '＋'}</button>
                         </div>
                         {sel ? <span style={s('position:absolute;inset:0;border:2px solid var(--accent);pointer-events:none;z-index:2;')} /> : null}
                       </div>
@@ -540,9 +550,9 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
                         <div style={s("display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);")}>
                           <span>#{String(c.gid).padStart(4, '0')}</span>
                           <span style={s('display:inline-flex;align-items:center;justify-content:center;min-width:15px;height:15px;border-radius:4px;border:1px solid var(--border-2);font-size:9px;color:var(--text-2);')}>{glyphFor(c.type)}</span>
-                          <span style={s('overflow:hidden;text-overflow:ellipsis;white-space:nowrap;')}>{c.stage}</span>
+                          <span style={s('overflow:hidden;text-overflow:ellipsis;white-space:nowrap;')}>{tval(c.stage)}</span>
                           <span style={s('flex:1;')} />
-                          {c.retreat != null ? <span title="にげるエネルギー">⟲{c.retreat}</span> : null}
+                          {c.retreat != null ? <span title={tr('retreatEnergy')}>⟲{c.retreat}</span> : null}
                         </div>
                       </div>
                     </div>
@@ -555,14 +565,14 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
                   <tr style={s('position:sticky;top:0;z-index:2;background:var(--panel-2);')}>
                     <th style={TH('width:38px;')} />
                     <th style={TH("width:78px;font-family:'JetBrains Mono',monospace;")}>ID</th>
-                    <th style={TH('')}>名前</th>
-                    <th style={TH('width:84px;')}>種別</th>
-                    <th style={TH('width:84px;')}>段階/種類</th>
-                    <th style={TH('width:52px;text-align:center;')}>タイプ</th>
+                    <th style={TH('')}>{tr('colName')}</th>
+                    <th style={TH('width:84px;')}>{tr('colKind')}</th>
+                    <th style={TH('width:84px;')}>{tr('colStage')}</th>
+                    <th style={TH('width:52px;text-align:center;')}>{tr('type')}</th>
                     <th style={TH('width:56px;text-align:right;')}>HP</th>
-                    <th style={TH('width:60px;text-align:right;')}>にげる</th>
-                    <th style={TH('width:72px;')}>拡張</th>
-                    <th style={TH('width:86px;text-align:right;')}>操作</th>
+                    <th style={TH('width:60px;text-align:right;')}>{tr('retreat')}</th>
+                    <th style={TH('width:72px;')}>{tr('expansion')}</th>
+                    <th style={TH('width:86px;text-align:right;')}>{tr('colActions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -580,20 +590,20 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
                         <td style={s('padding:5px 10px;border-bottom:1px solid var(--border);')}>
                           <div style={s('display:flex;align-items:center;gap:7px;')}>
                             <span style={s('font-weight:600;')}>{c.name}</span>
-                            {c.flag ? <span style={s("font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:600;color:var(--bg);background:var(--text);border-radius:4px;padding:1px 5px;")}>{c.flag}</span> : null}
-                            {c.hasAbility ? <span title="特性あり" style={s('font-size:9px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 4px;')}>特性</span> : null}
+                            {c.flag ? <span style={s("font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:600;color:var(--bg);background:var(--text);border-radius:4px;padding:1px 5px;")}>{tval(c.flag)}</span> : null}
+                            {c.hasAbility ? <span title={tr('hasAbilityOpt')} style={s('font-size:9px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 4px;')}>{tr('abilityShort')}</span> : null}
                           </div>
                         </td>
-                        <td style={s('padding:5px 10px;border-bottom:1px solid var(--border);color:var(--text-2);')}>{c.supertype}</td>
-                        <td style={s('padding:5px 10px;border-bottom:1px solid var(--border);color:var(--text-2);')}>{c.stage}</td>
+                        <td style={s('padding:5px 10px;border-bottom:1px solid var(--border);color:var(--text-2);')}>{tval(c.supertype)}</td>
+                        <td style={s('padding:5px 10px;border-bottom:1px solid var(--border);color:var(--text-2);')}>{tval(c.stage)}</td>
                         <td style={s('padding:5px 10px;border-bottom:1px solid var(--border);text-align:center;')}><span style={s('display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--border-2);font-size:10px;')}>{glyphFor(c.type)}</span></td>
                         <td style={s("padding:5px 10px;border-bottom:1px solid var(--border);text-align:right;font-family:'JetBrains Mono',monospace;color:var(--text);")}>{c.hp == null ? '—' : c.hp}</td>
                         <td style={s("padding:5px 10px;border-bottom:1px solid var(--border);text-align:right;font-family:'JetBrains Mono',monospace;color:var(--text-2);")}>{c.retreat == null ? '—' : `⟲${c.retreat}`}</td>
                         <td style={s("padding:5px 10px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-3);")}>{c.expansion}</td>
                         <td style={s('padding:5px 10px;border-bottom:1px solid var(--border);')}>
                           <div style={s('display:flex;gap:5px;justify-content:flex-end;')}>
-                            <button onClick={(e) => { e.stopPropagation(); toggleFav(c.id); }} title="お気に入り" style={s(shapeBtn(favSet.has(c.id), true))}>{favSet.has(c.id) ? '★' : '☆'}</button>
-                            <button onClick={(e) => { e.stopPropagation(); toggleCompare(c.id); }} title="比較に追加" style={s(shapeBtn(cmpSet.has(c.id), true))}>{cmpSet.has(c.id) ? '✓' : '＋'}</button>
+                            <button onClick={(e) => { e.stopPropagation(); toggleFav(c.id); }} title={tr('favorites')} style={s(shapeBtn(favSet.has(c.id), true))}>{favSet.has(c.id) ? '★' : '☆'}</button>
+                            <button onClick={(e) => { e.stopPropagation(); toggleCompare(c.id); }} title={tr('compare')} style={s(shapeBtn(cmpSet.has(c.id), true))}>{cmpSet.has(c.id) ? '✓' : '＋'}</button>
                           </div>
                         </td>
                       </tr>
@@ -605,7 +615,7 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
 
             {renderLimit < resultCount ? (
               <div style={s('display:flex;justify-content:center;padding:18px;')}>
-                <button className="pcv-more" onClick={() => setRenderLimit(renderLimit + 120)} style={s("height:36px;padding:0 20px;border:1px solid var(--border);border-radius:10px;background:var(--panel);color:var(--text);cursor:pointer;font-size:12.5px;font-family:'Noto Sans JP',sans-serif;")}>さらに表示 <span style={s("font-family:'JetBrains Mono',monospace;color:var(--text-3);")}>（残り {(resultCount - renderLimit).toLocaleString()} 件）</span></button>
+                <button className="pcv-more" onClick={() => setRenderLimit(renderLimit + 120)} style={s("height:36px;padding:0 20px;border:1px solid var(--border);border-radius:10px;background:var(--panel);color:var(--text);cursor:pointer;font-size:12.5px;font-family:'Noto Sans JP',sans-serif;")}>{tr('showMore')} <span style={s("font-family:'JetBrains Mono',monospace;color:var(--text-3);")}>{en ? `(${(resultCount - renderLimit).toLocaleString()} left)` : `（残り ${(resultCount - renderLimit).toLocaleString()} 件）`}</span></button>
               </div>
             ) : null}
           </main>
@@ -625,9 +635,9 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
         ) : null}
 
         {showReopenHandle ? (
-          <button onClick={() => setSidebarOpen(true)} title="比較トレイを開く" style={s('flex:none;width:40px;border-left:1px solid var(--border);background:var(--panel);color:var(--text-2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;writing-mode:vertical-rl;font-size:12px;')}>
+          <button onClick={() => setSidebarOpen(true)} title={tr('openCompare')} style={s('flex:none;width:40px;border-left:1px solid var(--border);background:var(--panel);color:var(--text-2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;writing-mode:vertical-rl;font-size:12px;')}>
             <span style={s('font-size:15px;writing-mode:horizontal-tb;')}>📌</span>
-            比較トレイ
+            {tr('compareTray')}
             {compareItems.length ? <span style={s("writing-mode:horizontal-tb;font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--accent);color:#fff;border-radius:10px;padding:1px 6px;")}>{compareItems.length}</span> : null}
           </button>
         ) : null}
@@ -641,11 +651,11 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
               <button onClick={() => setSelectedId(null)} style={s('width:32px;height:32px;border:1px solid var(--border);border-radius:9px;background:var(--panel-2);color:var(--text);cursor:pointer;font-size:14px;')}>←</button>
               <span style={s("font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-3);")}>#{String(sc.gid).padStart(4, '0')}</span>
               <div style={s('flex:1;')} />
-              <button onClick={() => toggleFav(sc.id)} style={s(`display:flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:9px;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;border:1px solid ${favSet.has(sc.id) ? 'var(--accent)' : 'var(--border)'};background:${favSet.has(sc.id) ? 'var(--accent)' : 'var(--panel-2)'};color:${favSet.has(sc.id) ? '#fff' : 'var(--text)'};`)}>{favSet.has(sc.id) ? '★' : '☆'} お気に入り</button>
-              <button onClick={() => toggleCompare(sc.id)} style={s(`display:flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:9px;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;border:1px solid ${cmpSet.has(sc.id) ? 'var(--accent)' : 'var(--border)'};background:${cmpSet.has(sc.id) ? 'var(--accent)' : 'var(--panel-2)'};color:${cmpSet.has(sc.id) ? '#fff' : 'var(--text)'};`)}>{cmpSet.has(sc.id) ? '✓' : '＋'} 比較</button>
+              <button onClick={() => toggleFav(sc.id)} style={s(`display:flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:9px;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;border:1px solid ${favSet.has(sc.id) ? 'var(--accent)' : 'var(--border)'};background:${favSet.has(sc.id) ? 'var(--accent)' : 'var(--panel-2)'};color:${favSet.has(sc.id) ? '#fff' : 'var(--text)'};`)}>{favSet.has(sc.id) ? '★' : '☆'} {tr('favorites')}</button>
+              <button onClick={() => toggleCompare(sc.id)} style={s(`display:flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:9px;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;border:1px solid ${cmpSet.has(sc.id) ? 'var(--accent)' : 'var(--border)'};background:${cmpSet.has(sc.id) ? 'var(--accent)' : 'var(--panel-2)'};color:${cmpSet.has(sc.id) ? '#fff' : 'var(--text)'};`)}>{cmpSet.has(sc.id) ? '✓' : '＋'} {tr('compare')}</button>
               <div style={s('width:1px;height:22px;background:var(--border);')} />
-              <button onClick={() => stepCard(-1)} title="前のカード" style={s("width:32px;height:32px;border:1px solid var(--border);border-radius:9px;background:var(--panel-2);color:var(--text);cursor:pointer;font-family:'JetBrains Mono',monospace;")}>‹</button>
-              <button onClick={() => stepCard(1)} title="次のカード" style={s("width:32px;height:32px;border:1px solid var(--border);border-radius:9px;background:var(--panel-2);color:var(--text);cursor:pointer;font-family:'JetBrains Mono',monospace;")}>›</button>
+              <button onClick={() => stepCard(-1)} title={tr('prevCard')} style={s("width:32px;height:32px;border:1px solid var(--border);border-radius:9px;background:var(--panel-2);color:var(--text);cursor:pointer;font-family:'JetBrains Mono',monospace;")}>‹</button>
+              <button onClick={() => stepCard(1)} title={tr('nextCard')} style={s("width:32px;height:32px;border:1px solid var(--border);border-radius:9px;background:var(--panel-2);color:var(--text);cursor:pointer;font-family:'JetBrains Mono',monospace;")}>›</button>
             </div>
 
             <div style={s('flex:1;overflow:auto;padding:24px;')}>
@@ -657,16 +667,16 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
                   <div>
                     <div style={s('display:flex;align-items:center;gap:8px;flex-wrap:wrap;')}>
                       <h2 style={s('margin:0;font-size:26px;font-weight:700;letter-spacing:-.01em;')}>{sc.name}</h2>
-                      {sc.flag ? <span style={s("font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--bg);background:var(--text);border-radius:6px;padding:3px 8px;")}>{sc.flag}</span> : null}
+                      {sc.flag ? <span style={s("font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--bg);background:var(--text);border-radius:6px;padding:3px 8px;")}>{tval(sc.flag)}</span> : null}
                     </div>
-                    <div style={s('margin-top:4px;font-size:12.5px;color:var(--text-2);')}>{[sc.supertype, sc.stage, sc.type ? `タイプ ${sc.type}` : null].filter(Boolean).join(' · ')}</div>
+                    <div style={s('margin-top:4px;font-size:12.5px;color:var(--text-2);')}>{[tval(sc.supertype), tval(sc.stage), sc.type ? `${tr('type')} ${tval(sc.type)}` : null].filter(Boolean).join(' · ')}</div>
                   </div>
                   <div style={s('display:flex;gap:8px;flex-wrap:wrap;')}>
                     {([
                       sc.hp != null ? ['HP', String(sc.hp)] : null,
-                      sc.type ? ['タイプ', glyphFor(sc.type)] : null,
-                      sc.retreat != null ? ['にげる', `⟲${sc.retreat}`] : null,
-                      sc.dpe ? ['最大DPE', sc.dpe.toFixed(1)] : null,
+                      sc.type ? [tr('type'), glyphFor(sc.type)] : null,
+                      sc.retreat != null ? [tr('retreat'), `⟲${sc.retreat}`] : null,
+                      sc.dpe ? [tr('maxDpe'), sc.dpe.toFixed(1)] : null,
                     ].filter(Boolean) as [string, string][]).map(([label, value]) => (
                       <div key={label} style={s('display:flex;flex-direction:column;gap:2px;min-width:62px;padding:8px 11px;border:1px solid var(--border);border-radius:9px;background:var(--panel);')}>
                         <span style={s("font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);font-family:'JetBrains Mono',monospace;")}>{label}</span>
@@ -680,7 +690,7 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
               {sc.hasAbility && sc.ability ? (
                 <div style={s('margin-top:24px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--panel);')}>
                   <div style={s('display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--accent-soft);border-bottom:1px solid var(--border);')}>
-                    <span style={s("font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--accent);font-family:'JetBrains Mono',monospace;")}>特性</span>
+                    <span style={s("font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--accent);font-family:'JetBrains Mono',monospace;")}>{tr('ability')}</span>
                     <span style={s('font-weight:700;font-size:14px;')}>{sc.ability.name}</span>
                   </div>
                   <div style={s('padding:12px 14px;font-size:12.5px;color:var(--text-2);line-height:1.8;')}>{sc.ability.text}</div>
@@ -689,7 +699,7 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
 
               {sc.attacks.length ? (
                 <div style={s('margin-top:16px;display:flex;flex-direction:column;gap:10px;')}>
-                  <span style={s("font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--text-3);font-family:'JetBrains Mono',monospace;")}>ワザ</span>
+                  <span style={s("font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--text-3);font-family:'JetBrains Mono',monospace;")}>{tr('attacks')}</span>
                   {sc.attacks.map((a, i) => (
                     <div key={i} style={s('border:1px solid var(--border);border-radius:12px;padding:13px 14px;background:var(--panel);')}>
                       <div style={s('display:flex;align-items:center;gap:10px;')}>
@@ -709,10 +719,10 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
 
               <div style={s('margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;')}>
                 {([
-                  ['拡張', sc.expansion],
-                  ['カテゴリ', sc.category],
-                  ['弱点', sc.weakness ? `${glyphFor(sc.weakness)}×2` : '—'],
-                  ['抵抗力', sc.resist ? `${glyphFor(sc.resist)}-30` : '—'],
+                  [tr('expansion'), sc.expansion],
+                  [tr('category'), sc.category],
+                  [tr('weakness'), sc.weakness ? `${glyphFor(sc.weakness)}×2` : '—'],
+                  [tr('resistance'), sc.resist ? `${glyphFor(sc.resist)}-30` : '—'],
                 ] as [string, ReactNode][]).map(([label, value]) => (
                   <div key={label} style={s('background:var(--panel);padding:10px 13px;display:flex;flex-direction:column;gap:3px;')}>
                     <span style={s("font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);font-family:'JetBrains Mono',monospace;")}>{label}</span>

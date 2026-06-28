@@ -35,6 +35,8 @@ describe('deriveKind', () => {
     expect(deriveKind('Item')).toBe('Trainer');
     expect(deriveKind('Special Energy')).toBe('Energy');
     expect(deriveKind('基本ポケモン')).toBe('Pokémon');
+    expect(deriveKind('ポケモン/たね')).toBe('Pokémon');
+    expect(deriveKind('ポケモン/2進化')).toBe('Pokémon');
     expect(deriveKind('ポケモンのどうぐ')).toBe('Trainer');
     expect(deriveKind('特殊エネルギー')).toBe('Energy');
   });

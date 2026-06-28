@@ -7,7 +7,9 @@ const JP_POKEMON_STAGES = new Set(['基本ポケモン', '1進化ポケモン', 
 
 export function deriveKind(stageOrType: string): CardKind {
   const value = stageOrType.trim();
-  if (/Pokémon$/.test(value) || JP_POKEMON_STAGES.has(value)) return 'Pokémon';
+  // Real JP data encodes Pokémon stages as `ポケモン/たね`, `ポケモン/1進化`, etc.;
+  // the dummy/EN forms are `基本ポケモン` / `Basic Pokémon`.
+  if (value.startsWith('ポケモン/') || /Pokémon$/.test(value) || JP_POKEMON_STAGES.has(value)) return 'Pokémon';
   if (/Energy$/.test(value) || JP_ENERGY_TYPES.has(value)) return 'Energy';
   if (TRAINER_TYPES.has(value) || JP_TRAINER_TYPES.has(value)) return 'Trainer';
   return 'Unknown';
