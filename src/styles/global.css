@@ -95,6 +95,33 @@ button {
   padding-right: calc(var(--side-width, 340px) + 36px);
 }
 
+/* JP/EN toggle rendered inline inside the viewer header. */
+.lang-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--panel-2, rgba(40, 54, 79, 0.08));
+  border: 1px solid var(--border, rgba(40, 54, 79, 0.16));
+}
+
+.lang-switch button {
+  border: 0;
+  border-radius: 7px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2, #41506b);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.lang-switch button.is-active {
+  background: #5558d6;
+  color: #fff;
+}
+
 .file-loader {
   width: min(720px, 100%);
   min-height: 420px;

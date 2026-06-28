@@ -1,5 +1,11 @@
 import { deriveKind } from '../lib/deriveKind';
-import { deriveFlags } from '../lib/flags';
+import {
+  aggregateCard,
+  deriveFlags,
+  deriveMove,
+  derivePrizeValue,
+  deriveStage,
+} from '../lib/cardTransform';
 import { displayValue, isBlank, nullableNumber } from '../lib/blank';
 import type { Card, CardLanguage, Move } from '../types';
 import type { InternalKey } from './columnMap';
@@ -38,6 +44,9 @@ export function foldMoves(rows: MappedRow[], lang: CardLanguage): FoldResult {
       const raw = cardRows.reduce<Record<string, string>>((acc, row) => ({ ...acc, ...row.raw }), {});
       const moves = cardRows.map(rowToMove).filter((move) => !isEmptyMove(move));
 
+      const flags = deriveFlags(rule, category);
+      const aggregate = aggregateCard(moves);
+
       return {
         cardId,
         name: displayValue(first.name, `Card ${cardId}`),
@@ -45,7 +54,7 @@ export function foldMoves(rows: MappedRow[], lang: CardLanguage): FoldResult {
         stageOrType,
         category,
         rule,
-        flags: deriveFlags(rule, category),
+        flags,
         prevStage: isBlank(first.prevStage) ? undefined : first.prevStage?.trim(),
         hp: nullableNumber(first.hp),
         type: displayValue(first.type),
@@ -57,6 +66,15 @@ export function foldMoves(rows: MappedRow[], lang: CardLanguage): FoldResult {
         moves,
         raw,
         _lang: lang,
+        stage: deriveStage(stageOrType),
+        prizeValue: derivePrizeValue(flags),
+        hasAbility: aggregate.hasAbility,
+        abilityCount: aggregate.abilityCount,
+        hasWeakness: !isBlank(first.weakness),
+        hasResistance: !isBlank(first.resistance),
+        bestDpe: aggregate.bestDpe,
+        peakDamage: aggregate.peakDamage,
+        nMoves: aggregate.nMoves,
       } satisfies Card;
     });
 
@@ -64,12 +82,12 @@ export function foldMoves(rows: MappedRow[], lang: CardLanguage): FoldResult {
 }
 
 function rowToMove(row: MappedRow): Move {
-  return {
+  return deriveMove({
     name: displayValue(row.moveName),
     cost: displayValue(row.cost),
     damage: displayValue(row.damage),
     effect: displayValue(row.effect),
-  };
+  });
 }
 
 function isEmptyMove(move: Move): boolean {

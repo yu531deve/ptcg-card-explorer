@@ -8,6 +8,7 @@ type Props = {
   cards: Card[];
   pdfUrl: string | null;
   indexPageCount: number;
+  langSwitch?: ReactNode;
 };
 
 const ACCENT_LIGHT = '#5558d6';
@@ -60,7 +61,7 @@ const SCOPED_CSS = `
 .pcv-imgfill{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;}
 `;
 
-export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount }: Props) {
+export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langSwitch }: Props) {
   const persisted = useRef(loadPersisted()).current;
   const refCards = useMemo(() => cards.map(toRefCard), [cards]);
   const expansions = useMemo(
@@ -491,6 +492,7 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount }: Pro
           <span style={s('display:flex;align-items:center;gap:6px;')}><span style={s('width:6px;height:6px;border-radius:50%;background:var(--accent);')} />JP</span>
           <span>全 <b style={s('color:var(--text);')}>{refCards.length.toLocaleString()}</b> 枚</span>
         </div>
+        {langSwitch ? <div style={s('display:flex;align-items:center;')}>{langSwitch}</div> : null}
         <div style={s('display:flex;background:var(--panel-2);border:1px solid var(--border);border-radius:9px;padding:2px;gap:2px;')}>
           <button onClick={() => setLayout('classic')} title="クラシック（右に比較）" style={s(seg(layout === 'classic'))}>クラシック</button>
           <button onClick={() => setLayout('twin')} title="ツインレール（左フィルタ）" style={s(seg(layout === 'twin'))}>ツインレール</button>
