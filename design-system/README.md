@@ -23,8 +23,8 @@ function Example() {
         <input type="search" placeholder="キーワード" />
       </Field>
       <div style={{ display: 'flex', gap: 'var(--ds-space-2)', marginTop: 'var(--ds-space-3)' }}>
-        <Chip active count={223}>特性あり</Chip>
-        <Chip count={121}>ex</Chip>
+        <Chip active count={12}>特性あり</Chip>
+        <Chip count={8}>ex</Chip>
       </div>
     </Panel>
   );

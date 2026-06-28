@@ -127,8 +127,8 @@ describe('url state', () => {
 
 describe('pdf page mapping', () => {
   it('maps card ids after the index pages', () => {
-    expect(getCardImagePage(1, 1267)).toBe(40);
-    expect(getCardImagePage(1267, 1267)).toBe(1306);
+    expect(getCardImagePage(1, 1000)).toBe(32);
+    expect(getCardImagePage(1000, 1000)).toBe(1031);
   });
 });
 

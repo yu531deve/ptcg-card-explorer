@@ -210,13 +210,11 @@ function main() {
   }
 
   console.log(`Wrote ${OUTPUT}`);
-  console.log(`Unique cards: ${records.length} (expected 1267)`);
-  console.log(`ex: ${exCount} (expected 121), Mega: ${megaCount} (expected 30)`);
+  console.log(`Unique cards: ${records.length}`);
+  console.log(`ex: ${exCount}, Mega: ${megaCount}`);
   console.log(`ACE SPEC: ${records.filter((r) => r.is_ace_spec).length}`);
   console.log(`Cards with ability: ${records.filter((r) => r.has_ability).length}`);
-  console.log(
-    `Avg HP — Basic(0): ${avgHpByStage[0]} (~97), Stage1(1): ${avgHpByStage[1]} (~137), Stage2(2): ${avgHpByStage[2]} (~208)`,
-  );
+  console.log(`Avg HP — Basic(0): ${avgHpByStage[0]}, Stage1(1): ${avgHpByStage[1]}, Stage2(2): ${avgHpByStage[2]}`);
 }
 
 main();
