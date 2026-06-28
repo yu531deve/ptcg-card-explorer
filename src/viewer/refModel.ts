@@ -1,4 +1,4 @@
-import { parseEnergySymbols } from '../lib/energy';
+import { parseEnergySymbols, type EnergyName } from '../lib/energy';
 import type { Card } from '../types';
 
 // The card shape the ported reference UI works with.
@@ -15,7 +15,9 @@ export type RefCard = {
   weakness: string;
   resist: string;
   flag: string | null;
+  flagTags: string[];
   category: string;
+  catTags: string[];
   expansion: string;
   hasAbility: boolean;
   ability: { name: string; text: string } | null;
@@ -37,12 +39,53 @@ export function glyphFor(t: string | null | undefined): string {
   return t === '無' ? '●' : t;
 }
 
-function flagFor(card: Card): string | null {
-  if (card.flags.mega) return 'メガ';
-  if (card.flags.ex) return 'ex';
-  if (card.flags.aceSpec) return 'ACE SPEC';
-  if (card.flags.tera) return 'テラ';
-  return null;
+// All flags a card carries, so filtering by テラ still finds テラ-ex cards.
+function flagTagsFor(card: Card): string[] {
+  const tags: string[] = [];
+  if (card.flags.mega) tags.push('メガ');
+  if (card.flags.ex) tags.push('ex');
+  if (card.flags.aceSpec) tags.push('ACE SPEC');
+  if (card.flags.tera) tags.push('テラ');
+  return tags;
+}
+
+// Energy type column may be a JP glyph (炎) or an EN code ({R}); normalise both
+// to the JP glyph used by the type facet/options.
+const ENERGY_GLYPH: Record<EnergyName, string | null> = {
+  Fire: '炎', Water: '水', Grass: '草', Lightning: '雷', Psychic: '超',
+  Fighting: '闘', Darkness: '悪', Metal: '鋼', Dragon: '竜', Colorless: '無',
+  Unknown: null,
+};
+
+function typeGlyph(raw: string): string | null {
+  const token = parseEnergySymbols(raw)[0];
+  if (!token) return null;
+  return ENERGY_GLYPH[token.energy];
+}
+
+// Trainer/Energy subtype labels live in the stage/type column; map EN→JP so the
+// category facet (semantic labels) matches regardless of source language.
+const TRAINER_CAT: Record<string, string> = {
+  'サポート': 'サポート', Supporter: 'サポート',
+  'グッズ': 'グッズ', Item: 'グッズ',
+  'ポケモンのどうぐ': 'ポケモンのどうぐ', 'ポケモンの道具': 'ポケモンのどうぐ', 'Pokémon Tool': 'ポケモンのどうぐ',
+  'スタジアム': 'スタジアム', Stadium: 'スタジアム',
+};
+const ENERGY_CAT: Record<string, string> = {
+  '基本エネルギー': '基本エネルギー', 'Basic Energy': '基本エネルギー',
+  '特殊エネルギー': '特殊エネルギー', 'Special Energy': '特殊エネルギー',
+};
+
+// Semantic category tags the facet filters on (ex/mega + trainer/energy subtype),
+// derived from flags and the stage/type column rather than the raw カテゴリ value.
+function catTagsFor(card: Card): string[] {
+  const tags: string[] = [];
+  if (card.flags.mega) tags.push('メガポケモン');
+  if (card.flags.ex) tags.push('ポケモンex');
+  const sot = card.stageOrType.trim();
+  if (TRAINER_CAT[sot]) tags.push(TRAINER_CAT[sot]);
+  if (ENERGY_CAT[sot]) tags.push(ENERGY_CAT[sot]);
+  return tags;
 }
 
 function stageLabel(card: Card): string {
@@ -72,13 +115,15 @@ export function toRefCard(card: Card): RefCard {
     name: card.name,
     supertype: KIND_SUPERTYPE[card.kind] ?? 'その他',
     stage: stageLabel(card),
-    type: card.type || null,
+    type: typeGlyph(card.type),
     hp: card.hp,
     retreat: card.retreat,
     weakness: card.weakness && card.weakness !== 'n/a' ? card.weakness : '',
     resist: card.resistance && card.resistance !== 'n/a' ? card.resistance : '',
-    flag: flagFor(card),
+    flag: flagTagsFor(card)[0] ?? null,
+    flagTags: flagTagsFor(card),
     category: card.category && card.category !== 'n/a' ? card.category : card.stageOrType,
+    catTags: catTagsFor(card),
     expansion: card.expansion,
     hasAbility: Boolean(card.hasAbility),
     ability,

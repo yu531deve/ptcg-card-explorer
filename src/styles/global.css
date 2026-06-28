@@ -95,6 +95,30 @@ button {
   padding-right: calc(var(--side-width, 340px) + 36px);
 }
 
+/* Data controls (lang toggle + reset) rendered inline in the viewer header. */
+.viewer-data-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.data-reset {
+  border: 1px solid var(--border, rgba(40, 54, 79, 0.16));
+  border-radius: 9px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2, #41506b);
+  background: var(--panel-2, rgba(40, 54, 79, 0.06));
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.data-reset:hover {
+  border-color: var(--accent, #5558d6);
+  color: var(--accent, #5558d6);
+}
+
 /* JP/EN toggle rendered inline inside the viewer header. */
 .lang-switch {
   display: inline-flex;

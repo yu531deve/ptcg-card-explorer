@@ -1,15 +1,16 @@
 import { useCallback, useState } from 'react';
-import { loadCsvFile } from '../csv/loadCsv';
+import { parseCsvText } from '../csv/loadCsv';
 import type { CardBundle, CardLanguage } from '../types';
 
 export type LoadedPdf = {
   lang: CardLanguage;
   fileName: string;
   url: string;
+  file: File;
 };
 
 type Props = {
-  onLoaded: (bundle: CardBundle) => void;
+  onLoaded: (bundle: CardBundle, csvText: string) => void;
   onPdfLoaded: (pdf: LoadedPdf) => void;
 };
 
@@ -44,10 +45,12 @@ export default function FileLoader({ onLoaded, onPdfLoaded }: Props) {
             lang: inferPdfLanguage(file.name),
             fileName: file.name,
             url: URL.createObjectURL(file),
+            file,
           });
         }
         for (const file of csvFiles) {
-          onLoaded(await loadCsvFile(file));
+          const text = await file.text();
+          onLoaded(await parseCsvText(text, file.name), text);
         }
         if (rejected.length) {
           setError(`未対応のファイルは無視しました: ${rejected.map((file) => file.name).join(', ')}`);

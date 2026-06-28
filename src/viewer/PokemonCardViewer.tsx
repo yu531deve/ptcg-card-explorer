@@ -15,13 +15,11 @@ const ACCENT_LIGHT = '#5558d6';
 const ACCENT_DARK = '#7d82f0';
 const STORAGE_KEY = 'ptcg-viewer-v1';
 
-type Layout = 'classic' | 'twin' | 'stage';
 type View = 'grid' | 'table';
 
 type Persisted = {
   theme?: ThemeName;
   view?: View;
-  layout?: Layout;
   favorites?: number[];
   compare?: number[];
   sidebarWidth?: number;
@@ -31,9 +29,9 @@ const FACETS: { key: keyof RefCard | 'hasAbility'; label: string; opts: string[]
   { key: 'supertype', label: '種別', opts: ['ポケモン', 'トレーナーズ', 'エネルギー'] },
   { key: 'stage', label: '進化段階', opts: ['たね', '1進化', '2進化'] },
   { key: 'type', label: 'タイプ', opts: ['草', '炎', '水', '雷', '超', '闘', '悪', '鋼', '竜', '無'] },
-  { key: 'category', label: 'カテゴリ', opts: ['ポケモンex', 'メガポケモン', 'サポート', 'グッズ', 'ポケモンのどうぐ', 'スタジアム', '基本エネルギー', '特殊エネルギー'] },
+  { key: 'catTags', label: 'カテゴリ', opts: ['ポケモンex', 'メガポケモン', 'サポート', 'グッズ', 'ポケモンのどうぐ', 'スタジアム', '基本エネルギー', '特殊エネルギー'] },
   { key: 'expansion', label: '拡張', opts: [] },
-  { key: 'flag', label: 'フラグ', opts: ['ex', 'メガ', 'ACE SPEC', 'テラ'] },
+  { key: 'flagTags', label: 'フラグ', opts: ['ex', 'メガ', 'ACE SPEC', 'テラ'] },
   { key: 'hasAbility', label: '特性', opts: ['特性あり'] },
 ];
 
@@ -72,7 +70,6 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
   const [theme, setTheme] = useState<ThemeName>(persisted.theme || 'light');
   const [mode, setMode] = useState<'search' | 'deck'>('search');
   const [view, setView] = useState<View>(persisted.view || 'grid');
-  const [layout, setLayout] = useState<Layout>(persisted.layout || 'classic');
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState('id');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -82,23 +79,21 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
   const [compare, setCompare] = useState<number[]>(persisted.compare || []);
   const [compareMode, setCompareMode] = useState<'images' | 'details'>('images');
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [filtersOpen, setFiltersOpen] = useState(true);
-  const [statsOpen, setStatsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(persisted.sidebarWidth || 332);
   const [renderLimit, setRenderLimit] = useState(120);
-  const [collapsedFacets, setCollapsedFacets] = useState<Set<string>>(() => new Set(['category', 'expansion']));
+  const [collapsedFacets, setCollapsedFacets] = useState<Set<string>>(() => new Set(['expansion']));
 
   useEffect(() => {
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ theme, view, layout, favorites, compare, sidebarWidth }),
+        JSON.stringify({ theme, view, favorites, compare, sidebarWidth }),
       );
     } catch {
       // ignore
     }
-  }, [theme, view, layout, favorites, compare, sidebarWidth]);
+  }, [theme, view, favorites, compare, sidebarWidth]);
 
   const accent = theme === 'dark' ? ACCENT_DARK : ACCENT_LIGHT;
   const favSet = useMemo(() => new Set(favorites), [favorites]);
@@ -110,6 +105,7 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
     if (key === 'hasAbility') return card.hasAbility;
     let v = (card as unknown as Record<string, unknown>)[key];
     if (key === 'stage') v = card.supertype === 'ポケモン' ? card.stage : null;
+    if (Array.isArray(v)) return v.some((x) => set.has(String(x)));
     if (v == null) return false;
     return set.has(String(v));
   };
@@ -236,6 +232,7 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
             : base.filter((c) => {
                 let v = (c as unknown as Record<string, unknown>)[F.key as string];
                 if (F.key === 'stage') v = c.supertype === 'ポケモン' ? c.stage : null;
+                if (Array.isArray(v)) return v.includes(o);
                 return v === o;
               }).length;
         const on = active.has(o);
@@ -250,51 +247,14 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
     Array.from(sets[k]).forEach((v) => chips.push({ label: `${F ? F.label : ''} · ${v}`, onRemove: () => toggleFacet(k, v) }));
   });
 
-  // ---- stats ----
-  const countBy = (arr: RefCard[], fn: (c: RefCard) => string | null) => {
-    const m: Record<string, number> = {};
-    arr.forEach((c) => {
-      const k = fn(c);
-      if (k == null) return;
-      m[k] = (m[k] || 0) + 1;
-    });
-    return m;
-  };
-  const blockFrom = (title: string, order: string[], obj: Record<string, number>) => {
-    const mx = Math.max(1, ...Object.values(obj));
-    return {
-      title,
-      rows: order.filter((o) => obj[o]).map((o) => ({ label: o, count: String(obj[o]), pct: Math.round((obj[o] / mx) * 100) })),
-    };
-  };
-  const statBlocks = [
-    blockFrom('種別', ['ポケモン', 'トレーナーズ', 'エネルギー'], countBy(result, (c) => c.supertype)),
-    blockFrom('タイプ', ['草', '炎', '水', '雷', '超', '闘', '悪', '鋼', '竜', '無'], countBy(result, (c) => c.type)),
-    blockFrom('進化段階', ['たね', '1進化', '2進化'], countBy(result.filter((c) => c.supertype === 'ポケモン'), (c) => c.stage)),
-  ];
-  const hps = result.filter((c) => c.hp != null).map((c) => c.hp as number);
-  const buckets = new Array(10).fill(0);
-  const edges = [50, 90, 120, 150, 180, 210, 250, 290, 330];
-  hps.forEach((h) => {
-    let bi = edges.findIndex((e) => h <= e);
-    if (bi === -1) bi = 9;
-    buckets[bi]++;
-  });
-  const hmax = Math.max(1, ...buckets);
-  const blabels = ['≤50', '90', '120', '150', '180', '210', '250', '290', '330', '330+'];
-
   const compareItems = compare.map((id) => byId.get(id)).filter((c): c is RefCard => Boolean(c));
   const sc = selectedId != null ? byId.get(selectedId) ?? null : null;
 
-  // ---- layout flags ----
-  const showTopFilters = (layout === 'classic' || layout === 'stage') && filtersOpen;
-  const showTopStats = (layout === 'classic' || layout === 'stage') && statsOpen;
-  const showLeftRail = layout === 'twin';
-  const compareRight = layout === 'classic' || layout === 'twin';
-  const compareBottom = layout === 'stage';
-  const showRightCompare = compareRight && sidebarOpen;
-  const showBottomCompare = compareBottom && sidebarOpen;
-  const showReopenHandle = compareRight && !sidebarOpen;
+  // ---- layout flags (twin layout only) ----
+  const showLeftRail = true;
+  const showRightCompare = sidebarOpen;
+  const showBottomCompare = false;
+  const showReopenHandle = !sidebarOpen;
 
   const rootStyle = {
     ...themeVars(theme, accent),
@@ -493,11 +453,6 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
           <span>全 <b style={s('color:var(--text);')}>{refCards.length.toLocaleString()}</b> 枚</span>
         </div>
         {langSwitch ? <div style={s('display:flex;align-items:center;')}>{langSwitch}</div> : null}
-        <div style={s('display:flex;background:var(--panel-2);border:1px solid var(--border);border-radius:9px;padding:2px;gap:2px;')}>
-          <button onClick={() => setLayout('classic')} title="クラシック（右に比較）" style={s(seg(layout === 'classic'))}>クラシック</button>
-          <button onClick={() => setLayout('twin')} title="ツインレール（左フィルタ）" style={s(seg(layout === 'twin'))}>ツインレール</button>
-          <button onClick={() => setLayout('stage')} title="ステージ（下に比較）" style={s(seg(layout === 'stage'))}>ステージ</button>
-        </div>
         <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="ライト / ダーク切替" style={s('flex:none;width:32px;height:32px;border-radius:9px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;')}>{theme === 'dark' ? '☀' : '☾'}</button>
       </header>
 
@@ -534,47 +489,7 @@ export default function PokemonCardViewer({ cards, pdfUrl, indexPageCount, langS
           <button onClick={() => setView('grid')} title="グリッド表示" style={s(segIcon(view === 'grid'))}>▦</button>
           <button onClick={() => setView('table')} title="テーブル表示" style={s(segIcon(view === 'table'))}>▤</button>
         </div>
-        <button onClick={() => setFiltersOpen(!filtersOpen)} style={s(toolBtn(false))}>フィルター <span style={s("font-family:'JetBrains Mono',monospace;font-size:10px;opacity:.7;")}>{filtersOpen ? '▾' : '▸'}</span></button>
-        <button onClick={() => setStatsOpen(!statsOpen)} style={s(toolBtn(false))}>統計 <span style={s("font-family:'JetBrains Mono',monospace;font-size:10px;opacity:.7;")}>{statsOpen ? '▾' : '▸'}</span></button>
       </div>
-
-      {/* TOP FILTERS / STATS */}
-      {showTopFilters ? (
-        <div style={s('flex:none;border-bottom:1px solid var(--border);background:var(--panel);max-height:42vh;overflow:auto;')}>
-          <Filters orientation="horizontal" />
-        </div>
-      ) : null}
-      {showTopStats ? (
-        <div style={s('flex:none;border-bottom:1px solid var(--border);background:var(--panel-2);padding:14px 16px;overflow-x:auto;')}>
-          <div style={s('display:flex;gap:26px;align-items:stretch;min-width:max-content;')}>
-            {statBlocks.map((blk) => (
-              <div key={blk.title} style={s('display:flex;flex-direction:column;gap:8px;min-width:160px;')}>
-                <span style={s("font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);font-family:'JetBrains Mono',monospace;")}>{blk.title}</span>
-                <div style={s('display:flex;flex-direction:column;gap:5px;')}>
-                  {blk.rows.map((r) => (
-                    <div key={r.label} style={s('display:flex;align-items:center;gap:8px;')}>
-                      <span style={s('width:42px;font-size:11px;color:var(--text-2);flex:none;text-align:right;')}>{r.label}</span>
-                      <div style={s('flex:1;height:7px;border-radius:4px;background:var(--hover);overflow:hidden;min-width:60px;')}><div style={s(`height:100%;width:${r.pct}%;background:var(--text);border-radius:4px;opacity:.78;`)} /></div>
-                      <span style={s("width:34px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-3);")}>{r.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-            <div style={s('display:flex;flex-direction:column;gap:8px;min-width:230px;')}>
-              <span style={s("font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);font-family:'JetBrains Mono',monospace;")}>HP 分布</span>
-              <div style={s('display:flex;align-items:flex-end;gap:3px;height:62px;')}>
-                {buckets.map((v, i) => (
-                  <div key={i} style={s('flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;')} title={`${blabels[i]} : ${v}枚`}>
-                    <div style={s(`width:100%;height:${Math.max(2, Math.round((v / hmax) * 48))}px;background:var(--accent);border-radius:3px 3px 0 0;opacity:.85;`)} />
-                    <span style={s("font-size:8px;font-family:'JetBrains Mono',monospace;color:var(--text-3);")}>{blabels[i]}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {/* BODY */}
       <div style={s('flex:1;display:flex;min-height:0;')}>
